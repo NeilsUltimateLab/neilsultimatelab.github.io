@@ -1,0 +1,261 @@
+
+@import url('https://fonts.googleapis.com/css2?family=Quicksand:wght@300;400;500;600;700&display=swap');
+
+
+@font-face {
+    font-family: 'Quicksand';
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: #fff;
+    color: #000;
+    font-family: 'Quicksand';
+    text-align: center;
+}
+
+.wrapper {
+    max-width: 900px;
+    margin-left: auto;
+    margin-right: auto;
+    padding: 40px;
+    text-align: left;
+}
+
+header {
+    background-color: rgb(39,40,43);
+    position: fixed;
+    top: 0;
+    width: 100%;
+}
+
+header .wrapper {
+    padding: 12px 12px;
+    text-align: left;
+}
+
+header a {
+    text-decoration: none;
+}
+
+header .site-name {
+    font-size: 1em;
+    color: #000;
+    font-weight: medium;
+    height: 3em;
+    margin-left: 25px;
+}
+
+nav {
+    margin-top: 20px;
+}
+
+nav li {
+    display: inline-block;
+    padding: 5px;
+}
+
+h1 {
+    font-size: 2em;
+}
+
+h2 {
+    margin: 20px 0;
+}
+
+h3 {
+    margin: 20px 0;
+}
+
+h4 {
+    margin: 20px 0;
+}
+
+p {
+    margin-top: 20px;
+    margin-bottom: 20px;
+}
+
+a {
+    color: rgb(103, 153,255);
+    font-weight: 400;
+}
+
+::-webkit-scrollbar {
+  background-color: clear;
+  height: 0px;
+}
+
+.description {
+    margin-bottom: 40px;
+}
+
+.item-list > li {
+    display: block;
+    background-color: inherit;
+    padding-bottom: 12px;
+    border-bottom: 2px solid rgb(44, 45, 45);
+}
+
+.item-list h1 {
+    padding-bottom: 10px;
+    padding-top: 10px;
+    font-size: 1.3em;
+}
+
+.item-list p {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    color: lightslategray;
+}
+
+.item-list a {
+    text-decoration: none;
+    color: #007bff;
+    font-weight: 400;
+}
+
+.tag-list {
+    margin-bottom: 15px;
+}
+
+.tag-list li,
+.tag {
+    display: inline-block;
+    background-color: #000;
+    color: #ddd;
+    padding: 4px 6px;
+    border-radius: 8px;
+    margin-right: 8px;
+}
+
+.tag-list a,
+.tag a {
+    text-decoration: none;
+}
+
+.item-page .tag-list {
+    display: inline-block;
+}
+
+.content {
+    margin-bottom: 40px;
+    margin-top: 20px;
+    line-height: 1.5em;
+}
+
+.browse-all {
+    display: block;
+    margin-bottom: 30px;
+}
+
+.all-tags li {
+    font-size: 1.4em;
+    margin-right: 10px;
+    padding: 6px 10px;
+}
+
+footer {
+    color: #8a8a8a;
+}
+
+@media (prefers-color-scheme: dark) {
+    body {
+        background-color: rgb(27, 27, 30);
+    }
+
+    body,
+    header .site-name {
+        color: #fff;
+    }
+
+    .item-list > li {
+        background-color: clear;
+        border-bottom: 2px solid rgb(44, 45, 45);
+    }
+
+    header {
+        background-color: rgb(39,40,43);
+    }
+}
+
+pre {
+    margin-bottom: 1.5em;
+    background-color: black;
+    padding: 16px 0;
+    border-radius: 8px;
+}
+
+pre code {
+    font-family: monospace;
+    display: block;
+    padding: 0 20px;
+    color: #a9bcbc;
+    line-height: 1.4em;
+    font-size: 1.25em;
+    overflow-x: auto;
+    white-space: pre;
+    -webkit-overflow-scrolling: touch;
+}
+
+pre code .keyword {
+    color: #e73289;
+}
+
+pre code .type {
+    color: #8281ca;
+}
+
+pre code .call {
+    color: #348fe5;
+}
+
+pre code .property {
+    color: #21ab9d;
+}
+
+pre code .number {
+    color: #db6f57;
+}
+
+pre code .string {
+    color: #fa641e;
+}
+
+pre code .comment {
+    color: #6b8a94;
+}
+
+pre code .dotAccess {
+    color: #92b300;
+}
+
+pre code .preprocessing {
+    color: #b68a00;
+}
+
+h3 code, p code {
+    background-color: #444;
+    padding: 4px;
+    border-radius: 2px;
+}
+
+blockquote {
+    background-color: #222;
+    border-left: 4px solid #ccc;
+    border-top-right-radius: 8px;
+    border-bottom-right-radius: 8px;
+}
+
+blockquote p {
+    margin: 10px;
+    padding: 10px;
+    font-family: 'Quicksand' monospace;
+    color: #fff;
+    font-weight: 400;
+}

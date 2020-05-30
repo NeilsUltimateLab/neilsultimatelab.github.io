@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content"><channel><title>NeilsUltimateLab</title><description></description><link>https://neilsultimatelab.github.io</link><language>en</language><lastBuildDate>Sat, 30 May 2020 19:46:49 +0530</lastBuildDate><pubDate>Sat, 30 May 2020 19:46:49 +0530</pubDate><ttl>250</ttl><atom:link href="https://neilsultimatelab.github.io/feed.rss" rel="self" type="application/rss+xml"/><item><guid isPermaLink="true">https://neilsultimatelab.github.io/posts/Understanding%20UIViewController%20Rotation%20when%20embed%20in%20Container%20View%20Controllers</guid><title>Understanding UIViewController Rotation ⍉</title><description>Understanding `UIViewController` Rotation</description><link>https://neilsultimatelab.github.io/posts/Understanding%20UIViewController%20Rotation%20when%20embed%20in%20Container%20View%20Controllers</link><pubDate>Sat, 30 May 2020 13:06:00 +0530</pubDate><content:encoded><![CDATA[<h1>Understanding UIViewController Rotation ⍉</h1><h2>Problem</h2><p>To enable the rotation of a single view controller used to display the preview of Images/Videos. It is natural that user will rotate the iPhone and screen changes accordingly, so it feels pleasing. But to achieve this, we need to enable the (almost) all Supported Device orientations.</p><p>Ex: <code>Portrait</code>, <code>LandscapeLeft</code>, <code>LandscapeRight</code>.</p><p>By enabling Supported Device orientations either from <code>Info.plist</code> or via <code>AppDelegate</code>.</p><pre><code class="language-swift">func application(_ application: UIApplication, supportedInterfaceOrientationsFor window: UIWindow?) -&gt; UIInterfaceOrientationMask {
+  return .all
+}
+</code></pre><p>By doing this we are allowing other view controllers to also rotate if device orientation changes. But we want only Image/Video Previewing view controller is allowed to Rotate in all orientations.</p><h2>Approach</h2><ul><li>Documentation: <a href="https://developer.apple.com/documentation/uikit/uiviewcontroller">Handling View Rotation</a></li></ul><blockquote><p>A view controller can override the <code>supportedInterfaceOrientations</code> method to limit the list of supported orientations.</p></blockquote><p>By doing we can allow our view controllers to limited orientations like below:</p><h3>ViewController</h3><pre><code class="language-swift">class ViewController: UIViewController {
+  ...
+  override var shouldAutorotate: Bool {
+    return false
+  }
+    
+  override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+      return .portrait
+  }
+  ...
+}
+</code></pre><h3>PreviewingViewController</h3><pre><code class="language-swift">class PreviewingViewController: UIViewController {
+  ...
+  override var shouldAutorotate: Bool {
+    return false
+  }
+    
+  override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+      return .allButUpsideDown
+  }
+  ...
+}
+</code></pre><h2>Results</h2><h3>Configuration 1:</h3><p>The <code>ViewController</code> is now the rootViewController of current <code>window</code> and our <code>PreviewingViewController</code> embedded in <code>UINavigationController</code> is being presented modally covering the entire screen.</p><ul><li>Result: It worked as desired. 😇</li></ul><h3>Configuration 2:</h3><p>The <code>ViewController</code> is embedded in <code>UINavigationController</code>, and <code>PreviewingViewController</code> is the same as <code>Configuration 1</code>.</p><ul><li>Result: It's not working now. <code>ViewController</code> screen is now rotating again as device orientation changes. 🙁</li></ul><h3>Configuration 3:</h3><p>The <code>ViewController</code> is embedded in <code>UITabBarController</code>, and <code>PreviewingViewController</code> is the same as <code>Configuration 1</code>.</p><ul><li>Result: Same as result as in <code>configuration 2</code>. ☹️</li></ul><h2>Observations</h2><p>Lets put break-point at <code>supportedInterfaceOrientations</code> on both <code>ViewController</code> and <code>PreviewingViewController</code>.</p><p>In <code>Configuration 1</code>: Break-point being hit every time when new orientation is applied on both view-controllers.</p><p>In <code>Configuration 2</code>: Break-point hit for first time, but not when device rotated on both view-controllers.</p><p>In <code>Configuration 3</code>: same as <code>configuration 2</code>.</p><h2>Revising the documentation 🧐</h2><blockquote><p>A view controller can override the <code>supportedInterfaceOrientations</code> method to limit the list of supported orientations.</p></blockquote><blockquote><p>Typically, the system calls this method <code>only</code> on the root view controller of the window or a view controller presented to fill the entire screen;</p></blockquote><p>Yes, this is why <code>Configuration 1</code> is working properly. In this configuration we have our <code>ViewController</code> as the only rootViewController of our window.</p><pre><code class="language-swift">if let window = (UIApplication.shared.delegate as? AppDelegate)?.window {
+  print(window.rootViewController is ViewController) 
+}
+
+// Prints true.
+</code></pre><p>And for the <code>PreviewingViewController</code> is being presented covering entire screen, so its <code>supportedInterfaceOrientations</code> property is also called every time device changes to new orientation.</p><p>So when the device orientation changes we get called for the appropriate <code>UIInterfaceOrientationMask</code></p><p>####So what's the deal for the <code>Configuration 2</code>?</p><p>Yes, now we have <code>UINavigationController</code> as our window's <code>rootViewController</code>.</p><pre><code class="language-swift">if let window = (UIApplication.shared.delegate as? AppDelegate)?.window {
+  print(window.rootViewController is UINavigationController)
+}
+
+// Prints true.
+</code></pre><p>We need to provide appropriate <code>supportedInterfaceOrientations</code> to our UINavigationController controller in order to get notified in <code>ViewController</code></p><p>Lets extend <code>UINavigationController</code>.</p><pre><code class="language-swift">extension UINavigationController {
+  open override var shouldAutorotate: Bool {
+    return true
+  }
+    
+  open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+    return topViewController?.supportedInterfaceOrientations ?? .allButUpsideDown
+  }
+}
+</code></pre><p>Now we have told <code>navigationController</code> to ask its <code>topViewController</code> to return appropriate <code>supportedInterfaceOrientations</code></p><p>As we run, we get hit at break point every-time when device is rotated to new orientation.</p><h4>Now lets see for our <code>Configuration 3</code> too.</h4><pre><code class="language-swift">extension UITabBarController {
+  open override var shouldAutorotate: Bool {
+      return true
+  }
+    
+  open override var supportedInterfaceOrientations: UIInterfaceOrientationMask {
+    return selectedViewController?.supportedInterfaceOrientations ?? .allButUpsideDown
+  }
+}
+</code></pre><p>As we have told <code>UITabBarController</code> to ask its <code>selectedViewController</code> to return its <code>supportedInterfaceOrientations</code>. As expected, this is working too, Break-point hit when device is rotated to new orientation. Hurray. 😎</p><h3><em>Question</em>:</h3><p><strong>Why we have to extend <code>UINavigationController</code> or <code>UITabBarController</code> (ContainerViewControllers) to do rotation according to its children?</strong></p><p>Further reading the documentation...</p><blockquote><p>child view controllers use the portion of the window providedfor them by their parent view controller andno longer participate directly in decisionsabout what rotations are supported.</p></blockquote><p>This may be the default implementation for container view controllers.</p><h2>Important Note</h2><p>The sole purpose of this gist to understand rotation behaviour of child viewControllers in ContainerViewController like UINavigationController, UITabBarControllers, UISplitViewControllers etc.</p><p>To implement proper rotation behaviour in our viewControllers, we should subclass these <code>ContainerViewController</code> and then override these properties, because extending these <code>UIKit</code> Classes <strong>globally</strong> will cause unexpected behaviour as mensioned in <a href="https://developer.apple.com/library/archive/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/CustomizingExistingClasses/CustomizingExistingClasses.html">Customizing Existing Classes</a>.</p><blockquote><p>If the name of a method declared in a category is the same as a method in the original class, or a method in another category on the same class (or even a superclass), the behavior is undefined as to which method implementation is used at runtime. This is less likely to be an issue if you’re using categories with your own classes, but can cause problems when using categories to add methods to standard Cocoa or Cocoa Touch classes.</p></blockquote><p>Thanks. 😀</p>]]></content:encoded></item></channel></rss>
