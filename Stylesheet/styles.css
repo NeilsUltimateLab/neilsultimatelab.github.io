@@ -60,7 +60,10 @@ body {
     max-width: 900px;
     margin-left: auto;
     margin-right: auto;
-    padding: 40px;
+    padding-top: 40px;
+    padding-bottom: 40px;
+    padding-left: 20px;
+    padding-right: 20px;
     text-align: left;
 }
 
@@ -87,7 +90,7 @@ header .site-name {
     color: #000;
     font-weight: medium;
     height: 4em;
-    margin-left: 25px;
+    margin-left: 8px;
 }
 
 nav {
@@ -101,6 +104,7 @@ nav li {
 
 h1 {
     font-size: 2em;
+    -webkit-font-kerning: auto;
 }
 
 h2 {
