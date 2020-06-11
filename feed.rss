@@ -1,4 +1,169 @@
-<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content"><channel><title>NeilsUltimateLab</title><description></description><link>https://neilsultimatelab.github.io</link><language>en</language><lastBuildDate>Tue, 2 Jun 2020 09:50:22 +0530</lastBuildDate><pubDate>Tue, 2 Jun 2020 09:50:22 +0530</pubDate><ttl>250</ttl><atom:link href="https://neilsultimatelab.github.io/feed.rss" rel="self" type="application/rss+xml"/><item><guid isPermaLink="true">https://neilsultimatelab.github.io/posts/MultipleWindows</guid><title>Multiple Windows</title><description>Multiple Windows in same screen</description><link>https://neilsultimatelab.github.io/posts/MultipleWindows</link><pubDate>Sat, 30 May 2020 19:06:00 +0530</pubDate><content:encoded><![CDATA[<h1>Multiple Windows</h1><p>Multiple windows within the same UIscreen.</p><p>We can create new window like this.</p><pre><code><span class="keyword">let</span> frame = <span class="type">UIScreen</span>.<span class="property">main</span>.<span class="property">bounds</span>
+<?xml version="1.0" encoding="UTF-8"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content"><channel><title>NeilsUltimateLab</title><description></description><link>https://neilsultimatelab.github.io</link><language>en</language><lastBuildDate>Thu, 11 Jun 2020 20:35:02 +0530</lastBuildDate><pubDate>Thu, 11 Jun 2020 20:35:02 +0530</pubDate><ttl>250</ttl><atom:link href="https://neilsultimatelab.github.io/feed.rss" rel="self" type="application/rss+xml"/><item><guid isPermaLink="true">https://neilsultimatelab.github.io/posts/OneTimeCodeField</guid><title>OneTimeCodeField *⃣</title><description>OneTimeCodeField without UITextFields</description><link>https://neilsultimatelab.github.io/posts/OneTimeCodeField</link><pubDate>Thu, 11 Jun 2020 12:00:00 +0530</pubDate><content:encoded><![CDATA[<h1>OneTimeCodeField *⃣</h1><p>Let's say we want to develop a OneTimeCode Or OneTimePassword field that will look something like this.</p><img src="https://neilsultimatelab.github.io/Images/OTCField.png" alt="OTCField"/><p>And we want to have auto-fill feature (iOS 12+).</p><h2>The standard UIControls</h2><p>To create this type of UI we can use multiple <code>UITextFields</code> that each will become the <code>firstResponder</code> at every keystroke, because each field will have single character.</p><p><code>UITextField</code> will render its default cursor, so we need to patch the <code>tintColor</code> property of the textFields.</p><p>Text-position in the text-field is not keeping the text in center at the time of editing.</p><p>For <em>delete</em> keystroke we need to identify the delete action (in code) to clear the current textField and make previous field the <code>firstResponder</code>.</p><p>So we need to find some solution that does not depend on the standard UITextField, but work <em>exactly</em> as single textField (ie. Interact with keyboard inputs).</p><p>So Investigating the <code>UITextField</code> class itself, we learned that it is a <code>UIControl</code> and conforms to <a href="https://developer.apple.com/documentation/uikit/uitextinput"><code>UITextInput</code></a> protocol which further extends <a href="https://developer.apple.com/documentation/uikit/uikeyinput"><code>UIKeyInput</code></a> protocol.</p><p>There is also a good example called <a href="https://www.hackingwithswift.com/example-code/uikit/how-to-create-custom-text-input-using-uikeyinput">creating custom text input using UIKeyInput</a> from <a href="https://www.hackingwithswift.com/example-code">Hacking With Swift's Swift Knowledge Base</a> .</p><h2>UIKeyInput</h2><blockquote><p>A set of methods a subclass of UIResponder uses to implement simple text entry.</p></blockquote><blockquote><p>Responders that implement the UIKeyInput protocol will be driven by the system-provided keyboard, which will be made available whenever a conforming responder becomes first responder.</p></blockquote><p>This means when we tap on our custom field view and make it <code>firstResponder</code>, then system's keyboard will be presented automatically. 🤩</p><pre><code><span class="keyword">public protocol</span> UIKeyInput : <span class="type">UITextInputTraits</span> {
+    <span class="keyword">var</span> hasText: <span class="type">Bool</span> { <span class="keyword">get</span> }
+    <span class="keyword">func</span> insertText(<span class="keyword">_</span> text: <span class="type">String</span>)
+    <span class="keyword">func</span> deleteBackward()
+}
+</code></pre><p>This protocol is also having <code>insertText(_:)</code> and <code>deleteBackward()</code> method requirements for interacting with system keystroke events. So our delete keystroke detection hack is solved too. 🥳</p><h2>Our Own Text Input Control</h2><pre><code><span class="comment">// 1</span>
+<span class="keyword">class</span> OneTimeCodeField: <span class="type">UIControl</span> {
+    
+    <span class="comment">// 2</span>
+    <span class="keyword">enum</span> FieldState {
+        <span class="keyword">case</span> empty
+        <span class="keyword">case</span> filled
+        <span class="keyword">case</span> responding
+    }
+
+    <span class="comment">// 3</span>
+    <span class="keyword">var</span> digit: <span class="type">Int</span> = <span class="number">6</span>
+    <span class="keyword">var</span> spacing: <span class="type">CGFloat</span> = <span class="number">12</span>
+    <span class="keyword">var</span> onCompletion: ((<span class="type">String</span>)-&gt;<span class="type">Void</span>)?
+    
+    <span class="comment">// 4</span>
+    <span class="keyword">var</span> keyboardType: <span class="type">UIKeyboardType</span> = .<span class="dotAccess">numberPad</span>
+    <span class="keyword">var</span> textContentType: <span class="type">UITextContentType</span> = .<span class="dotAccess">oneTimeCode</span>
+    
+}
+</code></pre><ol><li>We are declaring our <em>OneTimeCodeField</em> to be as <code>UIControl</code> just like <em>UITextField</em>.</li><li>Then we declare some <code>FieldState</code> for rendering text states at particular location.</li><li>We define <code>digit</code> to allow different passcode length and other properties for decoration and callback.</li><li>Then we declare the <code>keyboardType</code> and <code>textContentType</code> to tell UIKit to open specific keyboard for our case.</li></ol><pre><code><span class="keyword">class</span> OneTimeCodeField: <span class="type">UIControl</span> {
+    ...
+    
+    <span class="comment">// 5</span>
+    <span class="keyword">private var</span> labels: [<span class="type">UILabel</span>] = []
+    <span class="keyword">private var</span> layers: [<span class="type">CAShapeLayer</span>] = []
+    
+    <span class="comment">// 6</span>
+    <span class="keyword">private var</span> currentIndex: <span class="type">Int</span> = <span class="number">0</span>
+    
+    <span class="comment">// 7</span>
+    <span class="keyword">private var</span> yPosition: <span class="type">CGFloat</span> {
+        <span class="keyword">return self</span>.<span class="property">bounds</span>.<span class="property">height</span> - <span class="number">2</span>
+    }
+    
+    <span class="keyword">private var</span> individualWidth: <span class="type">CGFloat</span> {
+        <span class="keyword">return</span> (<span class="keyword">self</span>.<span class="property">bounds</span>.<span class="property">width</span> - (<span class="type">CGFloat</span>(digit - <span class="number">1</span>) * spacing)) / <span class="type">CGFloat</span>(digit)
+    }
+
+}
+</code></pre><ol start="5"><li>We will render our text using <code>UILabels</code> here and some <code>CALayers</code> for the bottom place marker.</li><li>We can have one variable <code>currentIndex</code> to track the current cursor position.</li><li>Some computed properties for sizing and positioning.</li></ol><pre><code><span class="keyword">class</span> OneTimeCodeField: <span class="type">UIControl</span> {
+    ...
+    
+    <span class="comment">// 8</span>
+    <span class="keyword">private lazy var</span> tapGesture: <span class="type">UITapGestureRecognizer</span> = {
+        <span class="keyword">let</span> tapGesture = <span class="type">UITapGestureRecognizer</span>(target: <span class="keyword">self</span>, action: <span class="keyword">#selector</span>(tapAction))
+        <span class="keyword">return</span> tapGesture
+    }()
+    
+    <span class="keyword">override init</span>(frame: <span class="type">CGRect</span>) {
+        <span class="keyword">super</span>.<span class="keyword">init</span>(frame: frame)
+        <span class="call">setup</span>()
+    }
+    
+    <span class="keyword">required init</span>?(coder: <span class="type">NSCoder</span>) {
+        <span class="keyword">super</span>.<span class="keyword">init</span>(coder: coder)
+        <span class="call">setup</span>()
+    }
+    
+    <span class="comment">// 9</span>
+    <span class="keyword">override func</span> draw(<span class="keyword">_</span> rect: <span class="type">CGRect</span>) {
+        <span class="keyword">super</span>.<span class="call">draw</span>(rect)
+        
+        <span class="keyword">for</span> index <span class="keyword">in</span> <span class="number">0</span>..&lt;digit {
+            <span class="keyword">let</span> placeLayer = <span class="call">shapeLayer</span>(at: index)
+            <span class="keyword">self</span>.<span class="property">layer</span>.<span class="call">addSublayer</span>(placeLayer)
+            <span class="keyword">self</span>.<span class="property">layers</span>.<span class="call">append</span>(placeLayer)
+        }
+    }
+    
+    <span class="keyword">private func</span> setup() {
+        <span class="keyword">self</span>.<span class="call">addGestureRecognizer</span>(tapGesture)
+
+        <span class="keyword">for _ in</span> <span class="number">0</span>..&lt;digit {
+            <span class="keyword">let</span> label = <span class="keyword">self</span>.<span class="call">label</span>()
+            stackView.<span class="call">addArrangedSubview</span>(label)
+            labels.<span class="call">append</span>(label)
+        }
+        
+        <span class="keyword">self</span>.<span class="call">addSubview</span>(stackView)
+        stackView.<span class="property">topAnchor</span>.<span class="call">constraint</span>(equalTo: <span class="keyword">self</span>.<span class="property">topAnchor</span>).<span class="property">isActive</span> = <span class="keyword">true</span>
+        stackView.<span class="property">leftAnchor</span>.<span class="call">constraint</span>(equalTo: <span class="keyword">self</span>.<span class="property">leftAnchor</span>).<span class="property">isActive</span> = <span class="keyword">true</span>
+        stackView.<span class="property">rightAnchor</span>.<span class="call">constraint</span>(equalTo: <span class="keyword">self</span>.<span class="property">rightAnchor</span>).<span class="property">isActive</span> = <span class="keyword">true</span>
+        stackView.<span class="property">bottomAnchor</span>.<span class="call">constraint</span>(equalTo: <span class="keyword">self</span>.<span class="property">bottomAnchor</span>).<span class="property">isActive</span> = <span class="keyword">true</span>
+    }
+}
+</code></pre><ol start="8"><li>We need some way to make our field first responder. So we initialize a tap gesture and add to ourself.</li><li>Setting up the place-marker layers in draw(_:) and labels using stackView to render texts.</li></ol><pre><code><span class="comment">// 10</span>
+<span class="keyword">@objc private func</span> tapAction(<span class="keyword">_</span> sender: <span class="type">UITapGestureRecognizer</span>) {
+    <span class="call">updateState</span>(.<span class="dotAccess">responding</span>, at: currentIndex)
+    <span class="keyword">self</span>.<span class="call">becomeFirstResponder</span>()
+}
+</code></pre><ol start="10"><li>When user taps our field we make this as a <code>firstResponder</code> so UIKit can present the keyboard.</li></ol><h3>We now implement the <code>UIKeyInput</code> protocol requirements.</h3><pre><code><span class="keyword">extension</span> <span class="type">OneTimeCodeField</span>: <span class="type">UIKeyInput</span> {
+    
+    <span class="comment">// 11</span>
+    <span class="keyword">private var</span> textCount: <span class="type">Int</span> {
+        <span class="keyword">let</span> count = labels.<span class="call">reduce</span>(<span class="number">0</span>) { (result, label) -&gt; <span class="type">Int</span> <span class="keyword">in
+            return</span> result + (label.<span class="property">text</span>?.<span class="property">count</span> ?? <span class="number">0</span>)
+        }
+        <span class="keyword">return</span> count
+    }
+    
+    <span class="comment">// 12</span>
+    <span class="keyword">var</span> hasText: <span class="type">Bool</span> {
+        textCount &gt; <span class="number">0</span>
+    }
+    
+    <span class="comment">// 13</span>
+    <span class="keyword">func</span> insertText(<span class="keyword">_</span> text: <span class="type">String</span>) {
+        <span class="keyword">guard let</span> label = labels[safe: currentIndex] <span class="keyword">else</span> { <span class="keyword">return</span> }
+        label.<span class="property">text</span> = text
+        <span class="call">updateState</span>(.<span class="dotAccess">filled</span>, at: currentIndex)
+        <span class="keyword">if</span> currentIndex &gt;= (digit - <span class="number">1</span>) {
+            <span class="keyword">self</span>.<span class="property">onCompletion</span>?(text)
+            <span class="call">resignFirstResponder</span>()
+            <span class="keyword">return</span>
+        }
+        currentIndex += <span class="number">1</span>
+        <span class="call">updateState</span>(.<span class="dotAccess">responding</span>, at: currentIndex)
+    }
+    
+    <span class="comment">// 14</span>
+    <span class="keyword">func</span> deleteBackward() {
+        <span class="keyword">let</span> label = labels[safe: currentIndex]
+        label?.<span class="property">text</span> = <span class="keyword">nil</span>
+        updateState(.<span class="dotAccess">empty</span>, at: currentIndex)
+        <span class="keyword">if</span> currentIndex &lt;= <span class="number">0</span> {
+            currentIndex = <span class="number">0</span>
+            <span class="call">updateState</span>(.<span class="dotAccess">responding</span>, at: currentIndex)
+            <span class="keyword">return</span>
+        }
+        currentIndex -= <span class="number">1</span>
+        <span class="call">updateState</span>(.<span class="dotAccess">responding</span>, at: currentIndex)
+    }
+
+}
+</code></pre><ol start="11"><li><code>textCount</code> is the computed property to return the all the characters count we have at the moment.</li><li>First requirement of protocol. We simply return compare with the <code>textCount</code> property we created above.</li><li><code>insertText(_:)</code> method will insert the new text at the <code>currentIndex</code>'s label and update cursor position.</li><li><code>deleteBackward()</code> method will be called when delete keystroke occurred. so we need to update the text and update the cursor position.</li></ol><h3>We have a safe subscript for array like this.</h3><pre><code><span class="keyword">extension</span> <span class="type">Array</span> {
+    <span class="keyword">subscript</span>(safe index: <span class="type">Array</span>.<span class="type">Index</span>) -&gt; <span class="type">Array</span>.<span class="type">Element</span>? {
+        <span class="keyword">if</span> index &lt; <span class="number">0</span> || index &gt;= <span class="keyword">self</span>.<span class="property">count</span> { <span class="keyword">return nil</span> }
+        <span class="keyword">return self</span>[index]
+    }
+}
+</code></pre><h3>Here we have it.</h3><p>When user taps on it, it become first-responder and keyboard appears. and as the user types it updates the labels and cursor position.</p><h3>But, this will not auto-fill the code.</h3><p>To have auto-fill we need to extend our class for <code>UITextInput</code> protocol.</p><blockquote><p>This enable features such as autocorrection and multistage text input in documents.</p></blockquote><p>This protocol having a huge requirements for handling all aspect of text-editing. But in our case we just want to have text-entry and deletion. So we can provide empty implementation for the auto-fill feature.</p><pre><code><span class="keyword">extension</span> <span class="type">OneTimeCodeField</span>: <span class="type">UITextInput</span> {
+    <span class="keyword">func</span> replace(<span class="keyword">_</span> range: <span class="type">UITextRange</span>, withText text: <span class="type">String</span>) {}
+
+    <span class="keyword">var</span> tokenizer: <span class="type">UITextInputTokenizer</span> { <span class="type">UITextInputStringTokenizer</span>() }
+
+    <span class="keyword">var</span> selectedTextRange: <span class="type">UITextRange</span>? {
+        <span class="keyword">get</span> { <span class="keyword">nil</span> }
+        <span class="call">set</span>(selectedTextRange) {}
+    }
+
+    <span class="keyword">var</span> markedTextRange: <span class="type">UITextRange</span>? { <span class="keyword">nil</span> }
+
+    <span class="keyword">var</span> markedTextStyle: [<span class="type">NSAttributedString</span>.<span class="type">Key</span> : <span class="type">Any</span>]? {
+        <span class="keyword">get</span> { <span class="keyword">nil</span> }
+        <span class="call">set</span>(markedTextStyle) {}
+    }
+    
+    ...
+}
+</code></pre><p>Full source code can be found at <a href="https://gist.github.com/NeilsUltimateLab/1ae9b98541cc340ec6eec223d9506963">GitHub-gist</a>.</p>]]></content:encoded></item><item><guid isPermaLink="true">https://neilsultimatelab.github.io/posts/MultipleWindows</guid><title>Multiple Windows</title><description>Multiple Windows in same screen</description><link>https://neilsultimatelab.github.io/posts/MultipleWindows</link><pubDate>Sat, 30 May 2020 19:06:00 +0530</pubDate><content:encoded><![CDATA[<h1>Multiple Windows</h1><p>Multiple windows within the same UIscreen.</p><p>We can create new window like this.</p><pre><code><span class="keyword">let</span> frame = <span class="type">UIScreen</span>.<span class="property">main</span>.<span class="property">bounds</span>
 <span class="keyword">let</span> newWindow = <span class="type">UIWindow</span>(frame: <span class="type">CGRect</span>(x: frame.<span class="property">origin</span>.<span class="property">x</span>, y: frame.<span class="property">midY</span>, width: frame.<span class="property">width</span>, height: frame.<span class="property">height</span>/<span class="number">2</span>))
 newWindow.<span class="property">isHidden</span> = <span class="keyword">false</span>
 </code></pre><p>or if we are on iOS 13 and above and have a <code>UIWindowScene</code>,</p><pre><code><span class="keyword">guard let</span> refWindow = <span class="keyword">self</span>.<span class="property">view</span>.<span class="property">window</span>, <span class="keyword">let</span> scene = refWindow.<span class="property">scene</span> <span class="keyword">else</span> { <span class="keyword">return</span> }

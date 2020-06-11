@@ -104,6 +104,7 @@ nav li {
 
 h1 {
     font-size: 2em;
+    line-height: 1em;
     -webkit-font-kerning: auto;
 }
 
@@ -127,6 +128,11 @@ p {
 a {
     color: rgb(103, 153,255);
     font-weight: 400;
+}
+
+ol {
+    margin-left: 25px;
+    text-align: left;
 }
 
 ::-webkit-scrollbar {
@@ -175,6 +181,8 @@ a {
     padding: 4px 6px;
     border-radius: 8px;
     margin-right: 8px;
+    margin-bottom: 2px;
+    margin-top: 8px;
 }
 
 .tag-list a,
@@ -209,6 +217,7 @@ footer {
 
 pre {
     margin-bottom: 1.5em;
+    margin-top: 1.5em;
     background-color: var(--main-code-background);
     padding: 16px 0;
     border-radius: 8px;
@@ -227,7 +236,7 @@ pre code {
 }
 
 pre code .keyword {
-    color: var();
+    color: var(--code-keyword);
 }
 
 pre code .type {
@@ -262,7 +271,7 @@ pre code .preprocessing {
     color: #b68a00;
 }
 
-h3 code, p code {
+h3 code, p code, ol code {
     background-color: var(--main-inline-code-background);
     padding: 4px;
     border-radius: 6px;
@@ -286,7 +295,9 @@ blockquote p {
 img {
     margin-left: auto;
     margin-right: auto;
-    width: 50%;
+    margin-top: 10px;
+    margin-bottom: 10px;
+    max-width: 100%;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -325,7 +336,7 @@ img {
         background-color: var(--main-code-background-dark);
     }
     
-    h3 code, p code {
+    h3 code, p code, ol code {
         background-color: var(--main-inline-code-background-dark);
     }
     
